@@ -1,0 +1,14 @@
+### Common ###
+build
+/.gradle
+/.idea
+/log
+/out
+/bin
+/buildSrc/.gradle
+/buildSrc/build
+*local.properties
+.gradletasknamecache
+gc.log
+/dataSources/
+

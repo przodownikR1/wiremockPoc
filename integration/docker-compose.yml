@@ -1,0 +1,77 @@
+version: '3'
+services:
+  tms:
+    image: pl.scalatech/wiremockPoc:latest
+    container_name: wiremockPoc
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      RDBMS_USERNAME: ${RDBMS_USERNAME}
+      RDBMS_PASSWORD: ${RDBMS_PASSWORD}
+      RDBMS_URL: ${RDBMS_URL}
+    healthcheck:
+      test: curl -sSf --max-time 3 http://localhost:8082/ops/health || exit 1
+      interval: 20s
+      timeout: 5s
+      retries: 5
+    ports:
+      - 8080:8080
+      - 8093:8082
+  db:
+    image: postgres
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=${RDBMS_USERNAME}
+      - POSTGRES_PASSWORD=${RDBMS_PASSWORD}
+    volumes:
+      - postgresql:/var/lib/postgresql
+      - postgresql_data:/var/lib/postgresql/data
+    ports:
+    - 5432:5432
+  exporter:
+    image: prom/node-exporter:latest
+    container_name: exporter
+    ports:
+      - 9100:9100
+    volumes:
+    - /proc:/host/proc:ro
+    - /sys:/host/sys:ro
+    - /:/rootfs:ro
+    command:
+    - --path.procfs=/host/proc
+    - --path.sysfs=/host/sys
+    - --collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)
+    restart: unless-stopped
+    network_mode: host
+  prometheus:
+    image: quay.io/prometheus/prometheus:latest
+    restart: always
+    ports:
+    - 9090:9090
+    volumes:
+    - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    - ./prometheus/alert.rules:/etc/prometheus/alert.rules
+    depends_on:
+    - exporter
+    - cadvisor
+    network_mode: host
+  grafana:
+    image: grafana/grafana
+    ports:
+    - 80:3000
+    depends_on:
+    - prometheus
+  cadvisor:
+    image: google/cadvisor:latest
+    container_name: cadvisor
+    restart: always
+    volumes:
+    - /:/rootfs:ro
+    - /var/run:/var/run:rw
+    - /sys:/sys:ro
+    - /var/lib/docker:/var/lib/docker:ro
+    ports:
+    - 9008:8080
+
+volumes:
+  postgresql:
+  postgresql_data:

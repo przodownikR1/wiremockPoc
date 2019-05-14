@@ -1,0 +1,140 @@
+buildscript {
+    repositories {
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
+        classpath "gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:${gradleGitPropertiesVersion}"
+        classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:${sonarqubeGradleVersion}"
+        classpath "se.transmode.gradle:gradle-docker:${dockerPluginVersion}"
+        classpath "com.adarshr:gradle-test-logger-plugin:${gradleTestLoggerVersion}"
+        classpath('gradle.plugin.com.palantir.gradle.docker:gradle-docker:0.21.0')
+    }
+}
+
+plugins {
+    id 'org.asciidoctor.convert' version '1.5.3'
+}
+
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply from: 'gradle/test.gradle'
+apply from: 'gradle/integrationTest.gradle'
+apply from: 'gradle/spock.gradle'
+apply from: 'gradle/boot.gradle'
+apply from: 'gradle/sonar.gradle'
+apply plugin: 'application'
+apply plugin: "com.adarshr.test-logger"
+apply plugin: 'com.palantir.docker'
+
+group = 'pl.java.scalatech'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('snippetsDir', file('build/generated-snippets'))
+    set('springCloudVersion', 'Greenwich.SR1')
+}
+
+mainClassName = 'pl.scalatech.wiremock.Application'
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-data-rest'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.data:spring-data-rest-hal-browser'
+
+    implementation "io.micrometer:micrometer-registry-jmx:latest.release"
+    runtime "io.micrometer:micrometer-registry-prometheus"
+
+    // SWAGGER
+    implementation"io.springfox:springfox-swagger2:${springfoxSwaggerVersion}"
+    implementation "io.springfox:springfox-swagger-ui:${springfoxSwaggerVersion}"
+
+    // LOGSTASH
+    implementation "ch.qos.logback:logback-core:${logbackCoreVersion}"
+    implementation "ch.qos.logback:logback-access:${logbackCoreVersion}"
+    implementation "ch.qos.logback:logback-classic:${logbackCoreVersion}"
+    implementation "net.logstash.logback:logstash-logback-encoder:${logstashLogbackEncoder}"
+
+    compileOnly 'org.projectlombok:lombok'
+    runtimeOnly 'com.h2database:h2'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-stub-runner'
+    testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-verifier'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+
+    //SPOCK TESTING
+    testImplementation "org.spockframework:spock-core:${spockCoreVersion}"
+    testImplementation "org.spockframework:spock-spring:${spockSpringVersion}"
+    testImplementation("com.athaydes:spock-reports:${spockReportsVersion}") {
+        transitive = false // this avoids affecting your version of Groovy/Spock
+    }
+    testImplementation "net.bytebuddy:byte-buddy:${byteBuddyVersion}"
+    testImplementation "org.objenesis:objenesis:${objenesisVersion}"
+    testImplementation "org.mutabilitydetector:MutabilityDetector:${mutabilityDetectorVersion}"
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
+    testImplementation "nl.jqno.equalsverifier:equalsverifier:${equalsverifierVersion}"
+    runtimeOnly 'com.h2database:h2'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+task unpack(type: Copy) {
+    dependsOn bootJar
+    from(zipTree(tasks.bootJar.outputs.files.singleFile))
+    into("build/dependency")
+}
+
+docker {
+    tags "${project.version}"
+    dockerfile project.file('Dockerfile')
+    name "${project.group}/${bootJar.baseName.toLowerCase()}"
+    copySpec.from(tasks.unpack.outputs).into("dependency")
+    buildArgs(['DEPENDENCY': "dependency"])
+
+}
+
+test {
+    outputs.dir snippetsDir
+}
+
+asciidoctor {
+    inputs.dir snippetsDir
+    dependsOn test
+}
+
+tasks.withType(JavaCompile) {
+    options.fork = true
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-Xlint:deprecation' << '-Xlint:unchecked'
+}
+testlogger {
+    theme 'plain-parallel'
+    showSummary true
+    slowThreshold 20
+    showPassed true
+    showSkipped true
+    showFailed true
+    showSkippedStandardStreams true
+    showFailedStandardStreams true
+}

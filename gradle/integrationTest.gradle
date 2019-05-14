@@ -1,0 +1,30 @@
+apply plugin: 'groovy'
+
+sourceSets {
+    integrationTest {
+         groovy.srcDir file('src/integrationTest/groovy')
+         resources.srcDir file('src/integrationTest/resources')
+         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+         runtimeClasspath += output + compileClasspath
+    }
+}
+
+task integrationTest(type: Test) {
+    description 'Run integration tests'
+    group 'verification'
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    reports {
+        junitXml {
+            destination file("$testResultsDir/integration")
+        }
+
+        html {
+            destination file("$testReportDir/integration")
+        }
+    }
+    outputs.upToDateWhen { true }
+}
+
+//check.dependsOn integrationTest //rethink this later
+integrationTest.mustRunAfter test
