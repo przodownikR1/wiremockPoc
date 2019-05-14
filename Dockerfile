@@ -1,6 +1,6 @@
 FROM openjdk:11-jdk-alpine
 
-MAINTAINER Hackaton <przodownikR1@gmail.com>
+MAINTAINER PrzodownikR1 <przodownikR1@gmail.com>
 
 VOLUME /tmp
 
