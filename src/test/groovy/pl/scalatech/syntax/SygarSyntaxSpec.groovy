@@ -1,4 +1,4 @@
-package pl.java.scalatech.syntax
+package pl.scalatech.syntax
 import java.lang.Void as Should
 import spock.lang.Specification
 

@@ -52,11 +52,6 @@ bootRun {
     ]
     def gcOpts = [
             '-verbose:gc',
-            '-XX:+PrintGCDetails',
-            '-XX:+PrintHeapAtGC',
-            '-XX:+PrintGCDateStamps',
-            '-XX:+PrintTenuringDistribution',
-            '-XX:+PrintClassHistogram',
             '-Xloggc:gc.log'
     ]
 

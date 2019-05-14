@@ -59,7 +59,7 @@ dependencies {
 
     implementation "io.micrometer:micrometer-registry-jmx:latest.release"
     runtime "io.micrometer:micrometer-registry-prometheus"
-
+    runtimeOnly 'org.postgresql:postgresql'
     // SWAGGER
     implementation"io.springfox:springfox-swagger2:${springfoxSwaggerVersion}"
     implementation "io.springfox:springfox-swagger-ui:${springfoxSwaggerVersion}"

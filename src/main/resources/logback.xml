@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>
+                <!-- @formatter:off -->
+                %date{ISO8601,UTC} | [%thread] | %-5level | %logger{15} | %X{X-B3-TraceId:-} | %X{X-B3-SpanId:-} | %msg%n
+                <!-- @formatter:on -->
+            </pattern>
+        </encoder>
+    </appender>
+    <root level="info">
+        <appender-ref ref="console"/>
+    </root>
+</configuration>
