@@ -78,6 +78,9 @@ dependencies {
     testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-stub-runner'
     testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-verifier'
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    testImplementation group: 'com.github.tomjankes', name: 'wiremock-groovy', version: '0.2.0'
+    testImplementation group: 'com.github.tomakehurst', name: 'wiremock', version: '2.23.2', ext: 'pom'
+    testImplementation group: 'com.github.tomakehurst', name: 'wiremock', version: '2.23.2', ext: 'pom'
 
     //SPOCK TESTING
     testImplementation "org.spockframework:spock-core:${spockCoreVersion}"
@@ -90,6 +93,7 @@ dependencies {
     testImplementation "org.mutabilitydetector:MutabilityDetector:${mutabilityDetectorVersion}"
     testImplementation "org.springframework.boot:spring-boot-starter-test"
     testImplementation "nl.jqno.equalsverifier:equalsverifier:${equalsverifierVersion}"
+    compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
     runtimeOnly 'com.h2database:h2'
 }
 
